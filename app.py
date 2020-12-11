@@ -8,7 +8,6 @@ from model import predict_model_factory
 from dataset import field_factory, metadata_factory
 from serialization import load_object
 from constants import MODEL_START_FORMAT
-global model
 from flask import Flask, render_template, request
 app = Flask(__name__)
 app.static_folder = 'static'
@@ -63,7 +62,7 @@ def get_model_path(dir_path, epoch):
 
 
 def main():
-    global model
+    global model, args
     torch.set_grad_enabled(False)
     args = parse_args()
    # print('Args loaded')
