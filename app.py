@@ -9,7 +9,7 @@ from dataset import field_factory, metadata_factory
 from serialization import load_object
 from constants import MODEL_START_FORMAT
 from flask import Flask, render_template, request
-global model,args
+global model
 
 app = Flask(__name__)
 app.static_folder = 'static'
@@ -31,7 +31,7 @@ customer_service_models = {
 model_path = 'trained-model/amazon'
 epoch = 10
 model = ''
-args = ''
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Script for "talking" with pre-trained chatbot.')
@@ -45,6 +45,7 @@ def parse_args():
     parser.add_argument('--cuda', action='store_true', default=False, help='Use cuda if available.')
 
     args = parser.parse_args()
+    print(type(args))
  
     #if args.customer_service:
      #   cs = customer_service_models[args.customer_service]
@@ -67,7 +68,7 @@ def get_model_path(dir_path, epoch):
 
 
 def main():
-    global model, args
+    global model
     torch.set_grad_enabled(False)
     args = parse_args()
    # print('Args loaded')
@@ -107,7 +108,7 @@ def home():
 
 @app.route("/get")
 def get_bot_response():
-  global model, args
+  global model
 
   userText = request.args.get('msg')
   response = model(userText, sampling_strategy=args.sampling_strategy, max_seq_len=args.max_seq_len)
