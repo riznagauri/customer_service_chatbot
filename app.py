@@ -109,6 +109,8 @@ def home():
 @app.route("/get")
 def get_bot_response():
   global model
+  args = parse_args()
+
 
   userText = request.args.get('msg')
   response = model(userText, sampling_strategy=args.sampling_strategy, max_seq_len=args.max_seq_len)
