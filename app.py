@@ -44,8 +44,8 @@ def parse_args():
     parser.add_argument('--max-seq-len', type=int, default=50, help='Maximum length for output sequence.')
     parser.add_argument('--cuda', action='store_true', default=False, help='Use cuda if available.')
 
-    args = parser.parse_args()
-    print(type(args))
+    args1 = parser.parse_args()
+    print(type(args1))
  
     #if args.customer_service:
      #   cs = customer_service_models[args.customer_service]
@@ -56,7 +56,7 @@ def parse_args():
        # print(cs[1])
        # args.epoch = 10
 
-    return args
+    return args1
 
 
 def get_model_path(dir_path, epoch):
@@ -68,7 +68,7 @@ def get_model_path(dir_path, epoch):
 
 
 def main():
-    global model
+    global model, args
     torch.set_grad_enabled(False)
     args = parse_args()
    # print('Args loaded')
@@ -108,10 +108,8 @@ def home():
 
 @app.route("/get")
 def get_bot_response():
-  global model
-  args = parse_args()
-
-
+  global model, args
+  
   userText = request.args.get('msg')
   response = model(userText, sampling_strategy=args.sampling_strategy, max_seq_len=args.max_seq_len)
   return str(response)      
