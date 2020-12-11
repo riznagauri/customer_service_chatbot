@@ -30,6 +30,8 @@ customer_service_models = {
 
 model_path = 'trained-model/amazon'
 epoch = 10
+model = ''
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Script for "talking" with pre-trained chatbot.')
     parser.add_argument('-cs', '--customer-service', choices=['amazon'])
