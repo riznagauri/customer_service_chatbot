@@ -113,7 +113,3 @@ def main():
 
 if __name__ == '__main__':
      main()
-     app.run() 
- #   app = Flask(__name__)
- #   app.static_folder = 'static'
-
