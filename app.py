@@ -109,8 +109,6 @@ def get_bot_response():
   response = model(userText, sampling_strategy=args.sampling_strategy, max_seq_len=args.max_seq_len)
   return str(response)      
     
-
-
 if __name__ == '__main__':
      main()
      app.run()
