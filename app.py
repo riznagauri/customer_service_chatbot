@@ -14,7 +14,6 @@ app = Flask(__name__)
 app.static_folder = 'static'
 
 
-
 class ModelDecorator(nn.Module):
       def __init__(self, model):
         super(ModelDecorator, self).__init__()
