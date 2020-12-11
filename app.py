@@ -8,6 +8,7 @@ from model import predict_model_factory
 from dataset import field_factory, metadata_factory
 from serialization import load_object
 from constants import MODEL_START_FORMAT
+global userText, response
 from flask import Flask, render_template, request
 app = Flask(__name__)
 app.static_folder = 'static'
@@ -84,6 +85,7 @@ def main():
         predict_model_factory(model_args, metadata, get_model_path(model_path + os.path.sep, epoch), field))
    # print('model loaded')
     model.eval()
+    response = model(userText, sampling_strategy=args.sampling_strategy, max_seq_len=args.max_seq_len)
 
     
    # print('\n\nBot: Hello, how can i help you ?', flush=True)
@@ -103,10 +105,11 @@ def home():
 def get_bot_response():
   userText = request.args.get('msg')
   #response = model(userText, sampling_strategy=args.sampling_strategy, max_seq_len=args.max_seq_len)
-  #return str(response)      
+  return str(response)      
     
 
 
 if __name__ == '__main__':
-     main()
      app.run()
+     main()
+     
