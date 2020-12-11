@@ -31,6 +31,7 @@ customer_service_models = {
 model_path = 'trained-model/amazon'
 epoch = 10
 model = ''
+args = ''
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Script for "talking" with pre-trained chatbot.')
@@ -106,7 +107,7 @@ def home():
 
 @app.route("/get")
 def get_bot_response():
-  global model
+  global model, args
 
   userText = request.args.get('msg')
   response = model(userText, sampling_strategy=args.sampling_strategy, max_seq_len=args.max_seq_len)
