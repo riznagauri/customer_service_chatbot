@@ -112,7 +112,7 @@ def get_bot_response():
   global model
   
   userText = request.args.get('msg')
-  response = model(userText, greedy, max_seq_len=50)
+  response = model(userText, sampling-strategy = 'greedy', max_seq_len=50)
   return str(response)      
     
 if __name__ == '__main__':
