@@ -24,9 +24,9 @@ six==1.15.0
 spacy==2.3.4
 srsly==1.0.5
 thinc==7.4.4
-torch==1.7.1+cpu
+torch==1.7.0+cpu
 torchtext==0.3.1
-torchvision==0.8.2
+torchvision==0.8.1+cpu
 tqdm==4.54.1
 typing-extensions==3.7.4.3
 urllib3==1.26.2
