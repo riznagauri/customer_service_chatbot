@@ -144,7 +144,7 @@ def main():
     df = pd.read_csv(DATA_FOLDER + 'twcs.csv')
     df.sort_values(by='tweet_id', inplace=True)
 
-    nlp = spacy.load('en')
+    nlp = spacy.load('en_core_web_sm')
     nlp.add_pipe(LanguageDetector())
 
     create_and_write_dataset(df, nlp, 'AmazonHelp', DATA_FOLDER)
