@@ -95,17 +95,17 @@ def main():
         #        break
 
     
-    @app.route("/")
-    def home():
-      return render_template("index.html")
-
-    @app.route("/get")
-    def get_bot_response():
-      userText = request.args.get('msg')
-      response = model(userText, sampling_strategy=args.sampling_strategy, max_seq_len=args.max_seq_len)
-      return str(response)
     
       
+@app.route("/")
+def home():
+  return render_template("index.html")
+
+@app.route("/get")
+def get_bot_response():
+  userText = request.args.get('msg')
+  response = model(userText, sampling_strategy=args.sampling_strategy, max_seq_len=args.max_seq_len)
+  return str(response)
 
     
 
