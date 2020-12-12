@@ -19,16 +19,7 @@ def encoder_factory(args, metadata):
 
 class Encoder(ABC, nn.Module):
     """
-    Defines encoder for seq2seq model.
-
-    Inputs: input, h_0
-        - **input** (seq_length, batch_size): Input sequence.
-        - **h_0** (num_layers * num_directions, batch, hidden_size): Initial hidden state of RNN. Default: None.
-
-    Outputs: outputs, h_n
-        - **outputs** (seq_len, batch, hidden_size * num_directions): Outputs of RNN last layer for every timestamp.
-        - **h_n** (num_layers * num_directions, batch, hidden_size): RNN outputs for all layers for t=seq_len (last
-                    timestamp)
+ 
     """
 
     @abstractmethod
@@ -53,24 +44,7 @@ class Encoder(ABC, nn.Module):
 
 class SimpleEncoder(Encoder):
     """
-    Encoder for seq2seq models.
-
-    :param rnn_cls: RNN callable constructor. RNN is either LSTM or GRU.
-    :param embed: Embedding layer.
-    :param embed_size: Dimensionality of word embeddings.
-    :param hidden_size: Dimensionality of RNN hidden representation.
-    :param num_layers: Number of layers in RNN. Default: 1.
-    :param dropout: Dropout probability for RNN. Default: 0.2.
-    :param bidirectional: If True, RNN will be bidirectional. Default: False.
-
-    Inputs: input, h_0
-        - **input** (seq_length, batch_size): Input sequence.
-        - **h_0** (num_layers * num_directions, batch, hidden_size): Initial hidden state of RNN. Default: None.
-
-    Outputs: outputs, h_n
-        - **outputs** (seq_len, batch, hidden_size * num_directions): Outputs of RNN last layer for every timestamp.
-        - **h_n** (num_layers * num_directions, batch, hidden_size): RNN outputs for all layers for t=seq_len (last
-                    timestamp)
+ 
     """
 
     def __init__(self, rnn_cls, embed, embed_size, hidden_size, num_layers=1, dropout=0.2,

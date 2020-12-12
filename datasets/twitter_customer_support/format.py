@@ -147,12 +147,8 @@ def main():
     nlp = spacy.load('en')
     nlp.add_pipe(LanguageDetector())
 
-    create_and_write_dataset(df, nlp, 'AppleSupport', DATA_FOLDER)
     create_and_write_dataset(df, nlp, 'AmazonHelp', DATA_FOLDER)
-    create_and_write_dataset(df, nlp, 'Uber_Support', DATA_FOLDER)
-    create_and_write_dataset(df, nlp, 'Delta', DATA_FOLDER)
-    create_and_write_dataset(df, nlp, 'SpotifyCares', DATA_FOLDER)
-
+ 
 
 if __name__ == '__main__':
     main()

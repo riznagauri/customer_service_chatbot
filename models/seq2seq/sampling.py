@@ -5,21 +5,7 @@ from abc import ABC, abstractmethod
 
 class SequenceSampler(ABC):
     """
-    Samples output sequence from decoder given input sequence (encoded). Sequence will be sampled until EOS token is
-    sampled or sequence reaches ``max_length``.
-
-    Inputs: encoder_outputs, h_n, decoder, sos_idx, eos_idx, max_length
-        - **encoder_outputs** (seq_len, batch, encoder_hidden_size): Last encoder layer outputs for every timestamp.
-        - **h_n** (num_layers * num_directions, batch, hidden_size): RNN outputs for all layers for t=seq_len (last
-                    timestamp)
-        - **decoder**: Seq2seq decoder.
-        - **sos_idx** (scalar): Index of start of sentence token in vocabulary.
-        - **eos_idx** (scalar): Index of end of sentence token in vocabulary.
-        - **max_length** (scalar): Maximum length of sampled sequence.
-
-    Outputs: sequences, lengths
-        - **sequences** (max_seq_len, batch): Sampled sequences.
-        - **lengths** (batch): Length of sequence for every batch.
+  
     """
 
     @abstractmethod
@@ -29,20 +15,6 @@ class SequenceSampler(ABC):
 
 class GreedySampler(SequenceSampler):
     """
-    Greedy sampler always chooses the most probable next token when sampling sequence.
-
-    Inputs: encoder_outputs, h_n, decoder, sos_idx, eos_idx, max_length
-        - **encoder_outputs** (seq_len, batch, encoder_hidden_size): Last encoder layer outputs for every timestamp.
-        - **h_n** (num_layers * num_directions, batch, hidden_size): RNN outputs for all layers for t=seq_len (last
-                    timestamp)
-        - **decoder**: Seq2seq decoder.
-        - **sos_idx** (scalar): Index of start of sentence token in vocabulary.
-        - **eos_idx** (scalar): Index of end of sentence token in vocabulary.
-        - **max_length** (scalar): Maximum length of sampled sequence.
-
-    Outputs: sequences, lengths
-        - **sequences** (batch, max_seq_len): Sampled sequences.
-        - **lengths** (batch): Length of sequence for every batch.
     """
     def sample(self, encoder_outputs, h_n, decoder, sos_idx, eos_idx, max_length):
         batch_size = encoder_outputs.size(1)
@@ -69,21 +41,7 @@ class GreedySampler(SequenceSampler):
 
 class RandomSampler(SequenceSampler):
     """
-    Random sampler uses roulette-wheel when selecting next token in sequence, tokens (softmax) probabilities are used as
-    token weights in roulette-wheel.
 
-    Inputs: encoder_outputs, h_n, decoder, sos_idx, eos_idx, max_length
-        - **encoder_outputs** (seq_len, batch, encoder_hidden_size): Last encoder layer outputs for every timestamp.
-        - **h_n** (num_layers * num_directions, batch, hidden_size): RNN outputs for all layers for t=seq_len (last
-                    timestamp)
-        - **decoder**: Seq2seq decoder.
-        - **sos_idx** (scalar): Index of start of sentence token in vocabulary.
-        - **eos_idx** (scalar): Index of end of sentence token in vocabulary.
-        - **max_length** (scalar): Maximum length of sampled sequence.
-
-    Outputs: sequences, lengths
-        - **sequences** (batch, max_seq_len): Sampled sequences.
-        - **lengths** (batch): Length of sequence for every batch.
     """
     def sample(self, encoder_outputs, h_n, decoder, sos_idx, eos_idx, max_length):
         batch_size = encoder_outputs.size(1)
@@ -125,22 +83,7 @@ class Sequence:
 
 class BeamSearch(SequenceSampler):
     """
-    Decodes sequence with beam search algorithm.
 
-    TODO this is very bad and very slow implementation of beam search, improve this ASAP
-
-    Inputs: encoder_outputs, h_n, decoder, sos_idx, eos_idx, max_length
-        - **encoder_outputs** (seq_len, batch, encoder_hidden_size): Last encoder layer outputs for every timestamp.
-        - **h_n** (num_layers * num_directions, batch, hidden_size): RNN outputs for all layers for t=seq_len (last
-                    timestamp)
-        - **decoder**: Seq2seq decoder.
-        - **sos_idx** (scalar): Index of start of sentence token in vocabulary.
-        - **eos_idx** (scalar): Index of end of sentence token in vocabulary.
-        - **max_length** (scalar): Maximum length of sampled sequence.
-
-    Outputs: sequences, lengths
-        - **sequences** (batch, max_seq_len): Sampled sequences.
-        - **lengths** (batch): Length of sequence for every batch.
     """
     def __init__(self, beam_width=10, alpha=1):
         self.beam_width = beam_width

@@ -8,35 +8,30 @@ from model import predict_model_factory
 from dataset import field_factory, metadata_factory
 from serialization import load_object
 from constants import MODEL_START_FORMAT
+from flask import Flask, render_template, request
+app = Flask(__name__)
+app.static_folder = 'static'
+
 
 
 class ModelDecorator(nn.Module):
-    """
-    Simple decorator around Seq2SeqPredict model which packs input question in list and unpacks output list into single
-    answer. This allows client to have simple interface for dialog-like model (doesn't need to worry about wrapping and
-    unwrapping).
-    """
-
-    def __init__(self, model):
+      def __init__(self, model):
         super(ModelDecorator, self).__init__()
         self.model = model
 
-    def forward(self, question, sampling_strategy, max_seq_len):
+      def forward(self, question, sampling_strategy, max_seq_len):
         return self.model([question], sampling_strategy, max_seq_len)[0]
 
 
 customer_service_models = {
-    'apple': ('pretrained-models/apple', 39),
-    'amazon': ('pretrained-models/amazon', 10),
-    'uber': ('pretrained-models/uber', 58),
-    'delta': ('pretrained-models/delta', 44),
-    'spotify': ('pretrained-models/spotify', 14)
+    'amazon': ('trained-model/amazon', 10),
 }
 
-
+model_path = 'trained-model/amazon'
+epoch = 10
 def parse_args():
     parser = argparse.ArgumentParser(description='Script for "talking" with pre-trained chatbot.')
-    parser.add_argument('-cs', '--customer-service', choices=['apple', 'amazon', 'uber', 'delta', 'spotify'])
+    parser.add_argument('-cs', '--customer-service', choices=['amazon'])
     parser.add_argument('-p', '--model-path',
                         help='Path to directory with model args, vocabulary and pre-trained pytorch models.')
     parser.add_argument('-e', '--epoch', type=int, help='Model from this epoch will be loaded.')
@@ -46,11 +41,15 @@ def parse_args():
     parser.add_argument('--cuda', action='store_true', default=False, help='Use cuda if available.')
 
     args = parser.parse_args()
-
-    if args.customer_service:
-        cs = customer_service_models[args.customer_service]
-        args.model_path = cs[0]
-        args.epoch = cs[1]
+ 
+    #if args.customer_service:
+     #   cs = customer_service_models[args.customer_service]
+      #  args.model_path = cs[0]
+      #  args.model_path='amazon'
+       # args.model_path = 'pretrained-models/amazon'
+      #  print(cs[0])
+       # print(cs[1])
+       # args.epoch = 10
 
     return args
 
@@ -66,37 +65,55 @@ def get_model_path(dir_path, epoch):
 def main():
     torch.set_grad_enabled(False)
     args = parse_args()
-    print('Args loaded')
-    model_args = load_object(args.model_path + os.path.sep + 'args')
-    print('Model args loaded.')
-    vocab = load_object(args.model_path + os.path.sep + 'vocab')
-    print('Vocab loaded.')
+   # print('Args loaded')
+ #   model_args = load_object(args.model_path + os.path.sep + 'args')
+    model_args = load_object(model_path + os.path.sep + 'args')
+   # print('Model args loaded.')
+    vocab = load_object(model_path + os.path.sep + 'vocab')
+   # print('Vocab loaded.')
 
     cuda = torch.cuda.is_available() and args.cuda
     torch.set_default_tensor_type(torch.cuda.FloatTensor if cuda else torch.FloatTensor)
-    print("Using %s for inference" % ('GPU' if cuda else 'CPU'))
+   # print("Using %s for inference" % ('GPU' if cuda else 'CPU'))
 
     field = field_factory(model_args)
     field.vocab = vocab
     metadata = metadata_factory(model_args, vocab)
 
     model = ModelDecorator(
-        predict_model_factory(model_args, metadata, get_model_path(args.model_path + os.path.sep, args.epoch), field))
-    print('model loaded')
+        predict_model_factory(model_args, metadata, get_model_path(model_path + os.path.sep, epoch), field))
+   # print('model loaded')
     model.eval()
 
-    question = ''
-    print('\n\nBot: Hi, how can I help you?', flush=True)
-    while question != 'bye':
-        while True:
-            print('Me: ', end='')
-            question = input()
-            if question:
-                break
+    
+   # print('\n\nBot: Hello, how can i help you ?', flush=True)
+    #while question != 'bye':
+     #   while True:
+      #      print('Me: ', end='')
+       #     question = input()
+       #     if question:
+        #        break
 
-        response = model(question, sampling_strategy=args.sampling_strategy, max_seq_len=args.max_seq_len)
-        print('Bot: ' + response)
+    
+    @app.route("/")
+    def home():
+      return render_template("index.html")
+
+    @app.route("/get")
+    def get_bot_response():
+      userText = request.args.get('msg')
+      response = model(userText, sampling_strategy=args.sampling_strategy, max_seq_len=args.max_seq_len)
+      return str(response)
+    
+      
+
+    
+
 
 
 if __name__ == '__main__':
-    main()
+     main()
+     app.run() 
+ #   app = Flask(__name__)
+ #   app.static_folder = 'static'
+

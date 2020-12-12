@@ -35,10 +35,7 @@ score_map = {
 
 def attention_factory(args):
     """
-    Factory method for attention module.
 
-    :param args: script args.
-    :return: Instance of Attention interface based on provided args.
     """
     score = score_map[args.attention_score](args)
     return attention_map[args.attention_type](args, score)
@@ -46,21 +43,7 @@ def attention_factory(args):
 
 class Attention(ABC, nn.Module):
     """
-    Defines attention layer for seq2seq models. Attention layer calculates attention context given current timestamp,
-    hidden state and all encoder outputs. Also, this layer supports batch computation of attention context in order to
-    optimize for speed of model training.
 
-    :param attn_score: Attention score function.
-
-    Inputs: hidden, encoder_outputs
-        - **t** (scalar): Current timestamp in decoder (0-based).
-        - **hidden** (batch, decoder_hidden_size): Decoder hidden representation (depending on concrete model it may be
-          from previous or current timestamp).
-        - **encoder_outputs** (seq_len, batch, encoder_hidden_size): Last encoder layer outputs for every timestamp.
-
-    Outputs: attn_weights, context
-        - **attn_weights** (batch, seq_len): (normalized) Attention weights.
-        - **context** (batch, encoder_hidden_size): Attention context vector.
     """
 
     def __init__(self, attn_score):
@@ -73,22 +56,14 @@ class Attention(ABC, nn.Module):
 
     def attn_weights(self, hidden, encoder_outputs):
         """
-        Generates attention weights.
 
-        :param hidden: (batch, decoder_hidden_size) Last decoder layer hidden output.
-        :param encoder_outputs: (seq_len, batch, encoder_hidden_size) Last encoder layer outputs for every timestamp.
-        :return: Attention weights (batch, seq_len)
         """
         scores = self.attn_score(hidden, encoder_outputs)
         return F.softmax(scores, dim=1)
 
     def attn_context(self, attn_weights, encoder_outputs):
         """
-        Generates attention context.
 
-        :param attn_weights: (batch, seq_len) Attention weights for encoder inputs.
-        :param encoder_outputs: (seq_len, batch, encoder_hidden_size) Last encoder layer outputs for every timestamp.
-        :return: Attention context (batch, seq_len).
         """
         weights = attn_weights.unsqueeze(2)  # (batch, seq_len) -> (batch, seq_len, 1)
         enc_out = encoder_outputs.permute(1, 2, 0)  # (seq_len, batch, enc_h) -> (batch, enc_h, seq_len)
@@ -98,19 +73,7 @@ class Attention(ABC, nn.Module):
 
 class GlobalAttention(Attention):
     """
-    Global (Bahdanau-style) attention which takes all source hidden states for computing attention context.
-
-    :param attn_score: Attention score function.
-
-    Inputs: hidden, encoder_outputs
-        - **t** (scalar): Current timestamp in decoder (0-based).
-        - **hidden** (batch, decoder_hidden_size): Decoder hidden representation (depending on concrete model it may be
-          from previous or current timestamp).
-        - **encoder_outputs** (seq_len, batch, encoder_hidden_size): Last encoder layer outputs for every timestamp.
-
-    Outputs: attn_weights, context
-        - **attn_weights** (batch, seq_len): (normalized) Attention weights.
-        - **context** (batch, encoder_hidden_size): Attention context vector.
+ 
     """
 
     def __init__(self, attn_score):
@@ -123,21 +86,7 @@ class GlobalAttention(Attention):
 
 class LocalMonotonicAttention(Attention):
     """
-    Local-m(onotonic) (Luong-style) attention which takes fixed subset of source hidden states centered around position
-    t for computing attention context.
 
-    :param attn_score: Attention score function.
-    :param D: Half window width. Actual window width is 2 * D + 1
-
-    Inputs: hidden, encoder_outputs
-        - **t** (scalar): Current timestamp in decoder (0-based).
-        - **hidden** (batch, decoder_hidden_size): Decoder hidden representation (depending on concrete model it may be
-          from previous or current timestamp).
-        - **encoder_outputs** (seq_len, batch, encoder_hidden_size): Last encoder layer outputs for every timestamp.
-
-    Outputs: attn_weights, context
-        - **attn_weights** (batch, seq_len): (normalized) Attention weights.
-        - **context** (batch, encoder_hidden_size): Attention context vector.
     """
 
     def __init__(self, attn_score, D):
@@ -155,24 +104,6 @@ class LocalMonotonicAttention(Attention):
 
 class LocalPredictiveAttention(Attention):
     """
-    Local-p(redictive) (Luong-style) attention which takes fixed subset of source hidden states centered around position
-    pt (which is learned) for computing attention context.
-
-    :param attn_score: Attention score function.
-    :param D: Half window width. Actual window width is 2 * D + 1
-
-    TODO When D is bigger than source sentence we are adding unnecessary padding, handle this case. (maybe just act as
-    TODO if we are using global attention?)
-
-    Inputs: hidden, encoder_outputs
-        - **t** (scalar): Current timestamp in decoder (0-based).
-        - **hidden** (batch, decoder_hidden_size): Decoder hidden representation (depending on concrete model it may be
-          from previous or current timestamp).
-        - **encoder_outputs** (seq_len, batch, encoder_hidden_size): Last encoder layer outputs for every timestamp.
-
-    Outputs: attn_weights, context
-        - **attn_weights** (batch, seq_len): (normalized) Attention weights.
-        - **context** (batch, encoder_hidden_size): Attention context vector.
     """
 
     def __init__(self, attn_score, hidden_size, decoder_hidden_size, D):
@@ -196,12 +127,7 @@ class LocalPredictiveAttention(Attention):
 
     def calculate_p(self, hidden, seq_len):
         """
-        Calculates pt positions for whole batch. pt is central position of local attention window.
-        pt = seq_len * sigmoid( vp * tanh(Wp * h) )
 
-        :param hidden: (batch, decoder_hidden_size) Decoder hidden representation.
-        :param seq_len: Sequence length for current batch.
-        :return: pt (batch) Predicted window positions for whole batch.
         """
         Wph = torch.tanh(self.Wp(hidden))
         p = seq_len * F.sigmoid(self.vp(Wph))
@@ -209,18 +135,7 @@ class LocalPredictiveAttention(Attention):
 
     def slice_windows(self, encoder_outputs, p):
         """
-        Slices (takes) encoder hidden states which are within the window determined by p (window center) values.
-        TODO is zero-padding ok thing to do where window is out of bounds?
 
-        :param encoder_outputs: (seq_len, batch, encoder_hidden_size): Last encoder layer outputs for every timestamp.
-        :param p: (batch) p (center) values for local attention window.
-        :return: **window_indices**, **encoder_outputs_local**
-
-            **window_indices** (window_size, batch): Indices of encoder hidden states positions (timestamps) which are
-            in local window.
-
-            **encoder_outputs_local** (window_size, batch, encoder_hidden_size): Encoder outputs with hidden states inside
-            calculated window.
         """
         batch_size = encoder_outputs.size(1)
         enc_hidden_size = encoder_outputs.size(2)
@@ -250,13 +165,7 @@ class LocalPredictiveAttention(Attention):
 
     def scale_weights(self, window_indices, p, attn_weights):
         """
-        Scales attention weights with truncated gaussian. attn_w * exp( -1/2sigm**2 * (s - p)**2 )
 
-        :param window_indices: (window_size, batch) Indices of encoder hidden states positions (timestamps) which are
-            in local window.
-        :param p: (batch) Predicted window positions for whole batch.
-        :param attn_weights: (batch, window_size) Attention weights.
-        :return: attn_weights (batch, window_size) scaled by truncated gaussian.
         """
         stddev = self.D / 2
         numerator = (window_indices - p.unsqueeze(0)) ** 2  # (window_size, batch)
@@ -266,16 +175,7 @@ class LocalPredictiveAttention(Attention):
 
 class AttentionScore(ABC, nn.Module):
     """
-    Defines attention score function. This layer supports batch computation of attention context in order to
-    optimize for speed of model training.
 
-    Inputs: hidden, encoder_outputs
-        - **hidden** (batch, decoder_hidden_size): Decoder hidden representation (depending on concrete model it may be
-          from previous or current timestamp).
-        - **encoder_outputs** (seq_len, batch, encoder_hidden_size): Last encoder layer outputs for every timestamp.
-
-    Outputs: attn_weights, context
-        - **attn_scores** (batch, seq_len): Attention scores.
     """
 
     @abstractmethod
@@ -285,16 +185,7 @@ class AttentionScore(ABC, nn.Module):
 
 class DotAttention(AttentionScore):
     """
-    Dot attention score layer implementation. e = ht * hs.
-    Size of encoder and decoder hidden representations must match!
 
-    Inputs: hidden, encoder_outputs
-        - **hidden** (batch, decoder_hidden_size): Decoder hidden representation (depending on concrete model it may be
-          from previous or current timestamp).
-        - **encoder_outputs** (seq_len, batch, encoder_hidden_size): Last encoder layer outputs for every timestamp.
-
-    Outputs: attn_weights, context
-        - **attn_scores** (batch, seq_len): Attention scores.
     """
 
     def forward(self, hidden, encoder_outputs):
@@ -307,18 +198,7 @@ class DotAttention(AttentionScore):
 
 class GeneralAttention(AttentionScore):
     """
-    General attention score layer implementation. e = ht * W * hs.
-
-    :param encoder_hidden_size: Encoder hidden representation size.
-    :param decoder_hidden_size: Decoder hidden representation size.
-
-    Inputs: hidden, encoder_outputs
-        - **hidden** (batch, decoder_hidden_size): Decoder hidden representation (depending on concrete model it may be
-          from previous or current timestamp).
-        - **encoder_outputs** (seq_len, batch, encoder_hidden_size): Last encoder layer outputs for every timestamp.
-
-    Outputs: attn_weights, context
-        - **attn_scores** (batch, seq_len): Attention scores.
+ 
     """
 
     def __init__(self, encoder_hidden_size, decoder_hidden_size):
@@ -339,19 +219,6 @@ class GeneralAttention(AttentionScore):
 
 class ConcatAttention(AttentionScore):
     """
-    Concat (Bahdanau) attention score layer implementation. e = v*tanh(W[ht;hs]).
-
-    :param hidden_size: Attention layer hidden representation size.
-    :param encoder_hidden_size: Encoder hidden representation size.
-    :param decoder_hidden_size: Decoder hidden representation size.
-
-    Inputs: hidden, encoder_outputs
-        - **hidden** (batch, decoder_hidden_size): Decoder hidden representation (depending on concrete model it may be
-          from previous or current timestamp).
-        - **encoder_outputs** (seq_len, batch, encoder_hidden_size): Last encoder layer outputs for every timestamp.
-
-    Outputs: attn_weights, context
-        - **attn_scores** (batch, seq_len): Attention scores.
     """
 
     def __init__(self, hidden_size, encoder_hidden_size, decoder_hidden_size):
