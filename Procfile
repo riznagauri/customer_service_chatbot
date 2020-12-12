@@ -1,1 +1,1 @@
-web: gunicorn wsgi:app
+web: $(python -m spacy download en; gunicorn wsgi:app)
