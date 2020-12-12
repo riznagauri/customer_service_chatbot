@@ -9,7 +9,7 @@ from dataset import field_factory, metadata_factory
 from serialization import load_object
 from constants import MODEL_START_FORMAT
 from flask import Flask, render_template, request
-global model
+global model, args
 
 app = Flask(__name__)
 app.static_folder = 'static'
@@ -30,7 +30,8 @@ customer_service_models = {
 
 model_path = 'trained-model/amazon'
 epoch = 10
-model = ''
+model = None
+args = None
 
 
 def parse_args():
